@@ -1,9 +1,9 @@
 {
   "name": "dr-sandesh-lamsal",
   "version": "1.0.0",
-  "main": "backend/token/tokenServer.js",
+  "main": "tokenServer.js",
   "scripts": {
-    "start": "node backend/token/tokenServer.js"
+    "start": "node tokenServer.js"
   },
   "dependencies": {
     "express": "^4.17.1",
