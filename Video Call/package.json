@@ -1,5 +1,5 @@
 {
-  "name": "Talk With Dr. Sandesh Lamsal", 
+  "name": "talk-with-drsandeshlamsal", 
   "version": "1.0.0",
   "main": "generate-jwt.js",
   "scripts": {
@@ -7,6 +7,7 @@
     "build": "echo 'No build step'"
   },
   "dependencies": {
-    "jsonwebtoken": "^9.0.2"
+    "jsonwebtoken": "^9.0.2",
+    "express": "^4.18.2"
   }
 }
