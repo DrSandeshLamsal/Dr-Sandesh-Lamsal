@@ -1,9 +1,13 @@
 const WS = require('ws'); // WebSocket library
 const http = require('http'); // HTTP library
+const jwt = require('jsonwebtoken'); // JWT library
+require('dotenv').config(); // Load environment variables
 
 const server = http.createServer(); // Create an HTTP server
 const wss = new WS.Server({ server }); // Create a WebSocket server using the HTTP server
 const clients = new Map(); // Map to store connected clients
+
+const SECRET_KEY = process.env.SECRET_KEY; // Use the secret key from environment variables
 
 wss.on('connection', (ws) => {
     const id = Math.random().toString(36).substr(2, 9); // Unique client ID
@@ -17,13 +21,20 @@ wss.on('connection', (ws) => {
     // Listen for messages
     ws.on('message', (message) => {
         console.log(`Received message from ${id}: ${message}`);
-
-        // Broadcast to all clients except the sender
-        clients.forEach((clientId, client) => {
-            if (client !== ws) {
-                client.send(JSON.stringify({ id, message }));
-            }
-        });
+        
+        const parsedMessage = JSON.parse(message);
+        
+        if (parsedMessage.type === 'getToken') {
+            const token = jwt.sign({ uid: id }, SECRET_KEY, { expiresIn: '1h' }); // Generate a token
+            ws.send(JSON.stringify({ type: 'token', token }));
+        } else {
+            // Broadcast to all clients except the sender
+            clients.forEach((clientId, client) => {
+                if (client !== ws) {
+                    client.send(JSON.stringify({ id, message }));
+                }
+            });
+        }
     });
 
     // Handle disconnection
