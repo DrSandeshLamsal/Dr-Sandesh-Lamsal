@@ -1,7 +1,9 @@
-const WebSocket = require('ws');
+const WS = require('ws'); // Renamed WebSocket to WS
+const http = require('http');
 
-// Create a new WebSocket server on port 8080
-const wss = new WebSocket.Server({ port: 8080 });
+// Create an HTTP server to integrate with the WebSocket server
+const server = http.createServer();
+const wss = new WS.Server({ server }); // Use the HTTP server for WebSocket connections
 const clients = new Map(); // Map to store connected clients
 
 wss.on('connection', (ws) => {
@@ -10,39 +12,30 @@ wss.on('connection', (ws) => {
 
     console.log(`Client connected: ${id}`);
 
-    ws.on('message', (message) => {
-        try {
-            const data = JSON.parse(message);
-            console.log(`Received message from ${id}:`, data);
+    // Send a welcome message to the newly connected client
+    ws.send(JSON.stringify({ message: 'Welcome to the WebSocket server!' }));
 
-            // Broadcast the received message to all clients except the sender
-            clients.forEach((clientId, client) => {
-                if (client !== ws) {
-                    client.send(JSON.stringify(data));
-                }
-            });
-        } catch (error) {
-            console.error('Error parsing message:', error);
-        }
+    // Listen for incoming messages
+    ws.on('message', (message) => {
+        console.log(`Received message from ${id}: ${message}`);
+
+        // Broadcast the received message to all clients except the sender
+        clients.forEach((clientId, client) => {
+            if (client !== ws) {
+                client.send(JSON.stringify({ id, message }));
+            }
+        });
     });
 
+    // Handle client disconnection
     ws.on('close', () => {
         console.log(`Client disconnected: ${id}`);
         clients.delete(ws); // Remove the client from the map on disconnect
     });
-
-    ws.on('error', (error) => {
-        console.error(`WebSocket error for client ${id}:`, error);
-    });
 });
 
-// Handle server termination gracefully
-process.on('SIGINT', () => {
-    console.log('Shutting down server...');
-    wss.close(() => {
-        console.log('Server closed');
-        process.exit(0);
-    });
+// Make sure to listen on the port provided by Render
+const PORT = process.env.PORT || 8080; // Use the Render-provided port or default to 8080
+server.listen(PORT, () => {
+    console.log(`WebSocket server running on wss://your-deployed-url`);
 });
-
-console.log('Signaling server running on ws://localhost:8080');
